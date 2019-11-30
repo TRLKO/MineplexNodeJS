@@ -1,0 +1,10 @@
+{
+    "port": 8080,
+    "host": "127.0.0.1",
+    "username": "mineplex",
+    "password": "mineplex",
+    "table_mineplex": "mineplex_mineplex",
+    "table_accounts": "mineplex_account",
+    "table_queue": "mineplex_queue",
+    "table_stats": "mineplex_stats"
+}

@@ -1,0 +1,18 @@
+{
+  "name": "MineplexNodeJS",
+  "version": "1.0.0",
+  "description": "Backend replacement for Mineplex Source Code",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon app.js",
+    "production": "node app.js"
+  },
+  "keywords": [],
+  "author": "https://github.com/randomdevlol",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "fastify": "^2.9.0",
+    "mysql": "^2.17.1"
+  }
+}

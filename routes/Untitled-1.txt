@@ -1,0 +1,51 @@
+========================= PERSONAL WEB SERVER ARCITECTURE 11/12/2019 =========================
+
+--- TODO:
+    - Learn difference between NGINX and Apache and what they are both best at
+    - Learn React
+    - Learn C# & .NET
+    - Decide which would be better for i/o nodejs backend, fastify or Express
+    - Decide which database would be best for main db & dbs for microservices
+    - Find out how security server is going to authenticate a person to view a certain page
+
+--- Router:
+    - NGINX or Apache
+    Requests:
+        - '/' -> Front end app
+        - '/api/*' -> Back end apps & microservices
+        - '/static/ -> Static file server
+        - '/files/' -> Protected file server
+
+--- Front end:
+    - NodeJS + React + Fastify
+    - CSS files delivered over static app?
+
+--- Back end:
+    - I/O apps -> NodeJS + Fastify/Express
+        - 
+    - Security, more resources needed -> C# .NET
+
+--- Security:
+    - jwtidentity
+    - C# .NET ?
+    - Provides one login for all microservices & front end
+
+--- Static:
+    - NGINX or Apache proxy used to deliver files
+    File management:
+        - Java/C# app deletes all files and then redownloads from a git repo?
+        - Control panel?
+
+--- Files:
+    - NodeJS / C# microservice
+    - user only can receive photos their account has uploaded or files that have been shared with them
+    File Management:
+        - Control Panel?
+        - Phone app
+
+--- Database:
+    - MySQL / Postgrest / MongoDB
+    Scaling:
+        - one database per app/microservice
+        - one main database
+        - Java/C# program runs every 24hrs to sync all databases for the microservices w/ the main database
