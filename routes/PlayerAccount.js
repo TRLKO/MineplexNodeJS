@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const config = require('../config.json');
 
-// const bodyParser = require('body-parser');
 const jsonParser = express.json();
 const rawParser = express.raw();
 
@@ -20,18 +19,24 @@ database.connect(err => {
 
 const accountsTable = config.table_accounts;
 
-// For purchases because there really isn't a designated table for storing them
-// database.query("CREATE TABLE IF NOT EXISTS `" + accountsTable + "`.`accountPurchases` ( `accountId` INT(11) NOT NULL , `salesPackageName` VARCHAR(30) NOT NULL , `salesPackageId` INT(11) NOT NULL , `cost` INT(11) NOT NULL , `usingCredits` INT(1) NOT NULL , `source` VARCHAR(30) NOT NULL , `Premium` INT(1) NOT NULL , `CoinPurchase` INT(1) NOT NULL , `known` INT(1) NOT NULL );", (err, result) => {
-//     if (err)
-//         throw err;
-// });
+// For purchases/transactions because for some reason I can't use the the transactions and accounttransactions table
+database.query("CREATE TABLE IF NOT EXISTS `" + accountsTable + "`.`accountpurchases` (`id` INT(11) NOT NULL AUTO_INCREMENT, `accountId` INT(11) NOT NULL , `salesPackageName` VARCHAR(30) NULL , `salesPackageId` INT(11) NULL , `cost` INT(11) NULL , `usingCredits` INT(1) NULL , `source` VARCHAR(30) NULL , `premium` INT(1) NULL , `coinPurchase` INT(1) NULL , `known` INT(1) NOT NULL, PRIMARY KEY(`id`), KEY(`accountId`), FOREIGN KEY(`accountId`) REFERENCES `accounts`(`id`));", (err, result) => {
+    if (err)
+        throw err;
+});
+
+/** @source https://stackoverflow.com/questions/1144783/how-to-replace-all-occurrences-of-a-string */
+String.prototype.replaceAll = function (find, replace) {
+    var str = this;
+    return str.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
+};
 
 /*
     /PlayerAccount/Login
     side note- i hate this
-    TODO: playerIps, adding a player to the database when they haven't joined before
+    TODO: adding a player to the database when they haven't joined before
 */
-router.post('/Login', jsonParser, (req, res) => {
+router.post('/Login', jsonParser, async (req, res) => {
     const uuid = req.body.Uuid;
     const name = req.body.Name;
     const ip = req.body.IpAddress;
@@ -41,33 +46,34 @@ router.post('/Login', jsonParser, (req, res) => {
             throw err;
 
         if (result[0] == undefined || result[0] == null) {
-            // name 	gems 	gold 	coins 	donorRank 	rank 	rankPerm 	rankExpire 	lastLogin 	totalPlayTime 
-            database.query("INSERT INTO `" + accountsTable + "`.`accounts` (uuid,name,gems,gold,coins,rank) VALUES ('" + uuid + "', '" + name + ", 5000, 50, 5000, null, ALL, null, null, null, 0')")
+            database.query("INSERT INTO `" + accountsTable + "`.`accounts` (uuid,name,gems,gold,coins,rank) VALUES ('" + uuid + "', '" + req.body.Name + ", 5000, 50, 5000, null, ALL, null, null, null, 0')", (err, result) => {
+                database.query("SELECT id FROM `" + accountsTable + "`.`accounts` WHERE `uuid`='" + uuid + "'", (err, result) => {
+                    let responseJSON = {
+                        "AccountId": result[0].id,
+                        "Name": name,
+                        "Rank": "ALL",
+                        "RankPerm": "null",
+                        "RankExpire": "",
+                        "EconomyBalance": 100,
+                        "LastLogin": "",
+                        "DonorToken": {
+                            "Gems": 5000,
+                            "Donated": false,
+                            "SalesPackages": [],
+                            "UnknownSalesPackages": [],
+                            "Transactions": [],
+                            "CoinRewards": [],
+                            "Coins": 5000,
+                            "CustomBuilds": [],
+                            "Pets": []
+                        },
+                        "Punishments": []
+                    }
 
-            let responseJSON = {
-                "AccountId": id,
-                "Name": name,
-                "Rank": "ALL",
-                "RankPerm": "null",
-                "RankExpire": "",
-                "EconomyBalance": 100,
-                "LastLogin": "",
-                "DonorToken": {
-                    "Gems": 5000,
-                    "Donated": false,
-                    "SalesPackages": [],
-                    "UnknownSalesPackages": [],
-                    "Transactions": [],
-                    "CoinRewards": [],
-                    "Coins": 5000,
-                    "CustomBuilds": [],
-                    "Pets": []
-                },
-                "Punishments": []
-            }
-
-            res.send(JSON.stringify(responseJSON));
-            res.end();
+                    res.send(JSON.stringify(responseJSON));
+                    res.end();
+                })
+            })
             return;
         }
 
@@ -114,52 +120,56 @@ router.post('/Login', jsonParser, (req, res) => {
                     });
                 })
 
-                let responseJSON = {
-                    "AccountId": id,
-                    "Name": name,
-                    "Rank": rank,
-                    "RankPerm": rankPerm,
-                    "RankExpire": parseInt(rankExpire),
-                    "EconomyBalance": 100,
-                    "LastLogin": parseInt(lastLogin),
-                    "Time": 0,
-                    "DonorToken": {
-                        "Gems": gems,
-                        "Donated": donated,
-                        "SalesPackages": [],
-                        "UnknownSalesPackages": [],
-                        "Transactions": [],
-                        "CoinRewards": [],
-                        "Coins": coins,
-                        "CustomBuilds": [],
-                        "Pets": []
-                    },
-                    "Punishments": punishments
-                }
+                database.query("SELECT * FROM `" + accountsTable + "`.`accountpurchases` WHERE `accountId`=" + id, (err, results) => {
+                    if (err)
+                        throw err;
 
-                console.log(responseJSON);
+                    let known = [];
+                    let unknown = [];
 
-                res.send(JSON.stringify(responseJSON));
-                res.end();
+                    var i = 0; // end me
+                    while (i < results.length) {
+                        let result = results[i];
+                        if (result.known == 1)
+                            known.push(result.salesPackageId)
+                        else
+                            unknown.push(result.salesPackageName)
 
-                console.log(punishments);
+                        if (i + 1 == results.length) {
+                            break;
+                        }
+                        i++;
+                    }
+
+                    let responseJSON = {
+                        "AccountId": id,
+                        "Name": name,
+                        "Rank": rank,
+                        "RankPerm": rankPerm,
+                        "RankExpire": parseInt(rankExpire),
+                        "EconomyBalance": 100,
+                        "LastLogin": parseInt(lastLogin),
+                        "Time": 0,
+                        "DonorToken": {
+                            "Gems": gems,
+                            "Donated": donated,
+                            "SalesPackages": known,
+                            "UnknownSalesPackages": unknown,
+                            "Transactions": [],
+                            "CoinRewards": [],
+                            "Coins": coins,
+                            "CustomBuilds": [],
+                            "Pets": []
+                        },
+                        "Punishments": punishments
+                    }
+
+                    console.log(responseJSON);
+
+                    res.send(JSON.stringify(responseJSON));
+                    res.end();
+                })
             })
-
-            // database.query("SELECT * FROM `" + accountsTable + "`.`accountPurchases` WHERE `accountId`='" + id + "'", (err, result) => {
-            //     if (err)
-            //         throw err;
-
-            //     let known = [];
-            //     let unknown = [];
-
-            //     if (typeof (result[0]) != 'undefined') {
-            //         if (result[0].known) {
-            //             known.push(result[0].salesPackageId);
-            //         } else {
-            //             unknown.push(result[0].salesPackageName);
-            //         }
-            //     }
-            // })
         })
     });
 });
@@ -192,10 +202,7 @@ router.post('/GetAccountByUUID', jsonParser, (res, req) => {
 /*
     /PlayerAccount/RankUpdate
 */
-router.post('/RankUpdate', jsonParser, (req, res) => {
-    res.send(req.body.Rank);
-    res.end(req.body.Rank);
-});
+router.post('/RankUpdate', jsonParser, (req, res) => res.end(req.body.Rank));
 
 /*
     /PlayerAccount/GetMatches
@@ -294,10 +301,21 @@ router.post('/PurchaseKnownSalesPackage', jsonParser, (req, res) => {
     const name = req.body.AccountName;
     const usingCredits = req.body.UsingCredits;
     const salesPackageId = req.body.SalesPackageId;
-    database.query("SELECT id,coins FROM `" + accountsTable + "`.`accountPunishments` WHERE `name`=`" + name + "`", (err, result) => {
+    database.query("SELECT id,coins FROM `" + accountsTable + "`.`accounts` WHERE `name`=`" + name + "`", (err, result) => {
+        if (err) {
+            res.end("Failed");
+            throw err;
+        }
         const id = result[0].id;
         const coins = result[0].coins;
 
+        database.query("INSERT INTO `" + accountsTable + "`.`accountpurchases` (accountId, salesPackageId, usingCredits, known) VALUES (" + id + ", " + salesPackageId + ", " + usingCredits + ", 1)", (err, result) => {
+            if (err) {
+                res.end("Failed");
+                throw err;
+            }
+            res.end("Success");
+        })
     })
 });
 
@@ -308,50 +326,33 @@ router.post('/PurchaseUnknownSalesPackage', jsonParser, (req, res) => {
     const name = req.body.AccountName;
     const salesPackageName = req.body.SalesPackageName;
     const cost = req.body.Cost;
-    const Premium = req.body.Premium;
+    const premium = req.body.Premium;
     const coinPurchase = req.body.CoinPurchase;
-    res.end("Success");
-    // database.query("SELECT id,coins FROM `" + accountsTable + "`.`accounts` WHERE `name`='" + name + "'", (err, result) => {
-    //     if (err) {
-    //         res.send("Failed");
-    //         res.end();
-    //         throw err;
-    //     }
-    //     const id = result[0].id;
-    //     const coins = result[0].coins;
-    //     if (cost > coins) {
-    //         res.send("InsufficientFunds");
-    //         res.end();
-    //         return;
-    //     }
+    database.query("SELECT id,coins FROM `" + accountsTable + "`.`accounts` WHERE `name`='" + name + "'", (err, result) => {
+        if (err) {
+            res.send("Failed");
+            res.end();
+            throw err;
+        }
+        const id = result[0].id;
+        const coins = result[0].coins;
+        if (cost > coins) {
+            res.send("InsufficientFunds");
+            res.end();
+            return;
+        }
 
-    //     let _premium = Premium ? 1 : 0;
-    //     let _coinPurchase = coinPurchase ? 1 : 0;
+        let _premium = premium ? 1 : 0;
+        let _coinPurchase = coinPurchase ? 1 : 0;
 
-    //     database.query("INSERT INTO `" + accountsTable + "`.`accountPurchases` (accountId, salesPackageName, salesPackageId, cost, usingCredits, source, Premium, CoinPurchase) VALUES (" + id + ", '" + salesPackageName + "', 0, " + cost + ", false, 'Purchase', " + _premium + ", " + _coinPurchase + ")", (err, result) => {
-    //         if (err) {
-    //             res.send("Failed 1");
-    //             res.end();
-    //             throw err;
-    //         }
-
-    //         console.log(2);
-
-    //         database.query("INSERT INTO `" + accountsTable + "`.`accountcointransactions` (accountId, reason, coins) VALUES (" + id + ", 'Purchased " + salesPackageName + "', " + cost + ")", (err, result) => {
-    //             if (err) {
-    //                 res.send("Failed");
-    //                 res.end();
-    //                 throw err;
-    //             }
-
-    //             console.log(3);
-
-    //             res.send("Success");
-    //             res.end();
-    //         });
-    //     });
-
-    // })
+        database.query("INSERT INTO `" + accountsTable + "`.`accountpurchases` (accountId, salesPackageName, cost, premium, coinPurchase, known) VALUES (" + id + ", '" + salesPackageName + "', " + cost + ", " + premium + ", " + coinPurchase + ", 0)", (err, result) => {
+            if (err) {
+                res.end("Failed");
+                throw err;
+            }
+            res.end("Success");
+        })
+    })
 });
 
 /*
@@ -455,24 +456,28 @@ router.post('/RemovePunishment', jsonParser, (req, res) => {
     var whereString = "";
     let whereConditions = [];
     if (target != null) {
-        whereConditions.push("`target`=`" + target + "`");
+        whereConditions.push("target='" + target + "'");
     }
     if (punishmentID != null) {
-        whereConditions.push("`id`=`" + punishmentID + "`");
+        whereConditions.push("id='" + punishmentID + "'");
     }
     if (reason != null) {
-        whereConditions.push("`reason`=`" + reason + "`");
+        whereConditions.push("reason='" + reason + "'");
     }
     if (admin != null) {
-        whereConditions.push("`punisher`=`" + admin + "`");
+        whereConditions.push("admin='" + admin + "'");
     }
     whereConditions.forEach((condition, index) => {
-        whereString += condition;
+        // console.log(condition, condition.replaceAll("'", ""))
+        whereString += condition;//.replaceAll("'", "");
+        console.log(whereString);
         if (index + 1 != whereConditions.length)
-            whereString += ",";
+            whereString += " AND ";
     });
 
     query += whereString;
+    console.log(whereString);
+    console.log(query);
 
     database.query(query, (err, result) => {
         if (err)
