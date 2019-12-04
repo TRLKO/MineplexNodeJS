@@ -14,28 +14,12 @@
 const express = require('express');
 const app = express();
 const config = require('./config.json');
-const port = config.port;
-
-// For being able to get POST data
-// app.use(express.urlencoded({ extended: false }));
-// app.use(express.json());
-
-// app.use(function (req, res, next) {
-//     req.rawBody = '';
-//     req.setEncoding('utf8');
-
-//     req.on('data', function (chunk) {
-//         req.rawBody += chunk;
-//     });
-
-//     next();
-// });
 
 // Routes
 app.use('/accounts/PlayerAccount', require('./routes/PlayerAccount'));
 app.use('/accounts/Dominate', require('./routes/Dominate'));
 app.use('/accounts/Pets', require('./routes/Pets'));
 
-app.listen(port, () => {
+app.listen(8080, () => {
     console.log(`Server Started on port ${port}`)
 })

@@ -5,18 +5,7 @@ const config = require('../config.json');
 const jsonParser = express.json();
 const rawParser = express.raw();
 
-const mysql = require('mysql');
-const database = mysql.createConnection({
-    host: config.host,
-    user: config.username,
-    password: config.password
-});
-database.connect(err => {
-    if (err)
-        throw err;
-    console.log("PlayerAccount Route DB Connected.")
-});
-
+const database = require('../Database');
 const accountsTable = config.table_accounts;
 
 // For purchases/transactions because for some reason I can't use the the transactions and accounttransactions table

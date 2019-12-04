@@ -6,17 +6,7 @@ const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
 const rawParser = bodyParser.text();
 
-const mysql = require('mysql');
-const database = mysql.createConnection({
-    host: config.host,
-    user: config.username,
-    password: config.password
-});
-database.connect(err => {
-    if (err)
-        throw err;
-    console.log("Pets Route DB Connected.")
-});
+const database = require('../Database');
 
 /*
     /Pets/GetPets
