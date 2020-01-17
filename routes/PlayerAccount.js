@@ -8,6 +8,8 @@ const rawParser = express.raw();
 const database = require('../Database');
 const accountsTable = config.table_accounts;
 
+const functions = require('../functions/Player');
+
 // For purchases/transactions because for some reason I can't use the the transactions and accounttransactions table
 database.query("CREATE TABLE IF NOT EXISTS `" + accountsTable + "`.`accountpurchases` (`id` INT(11) NOT NULL AUTO_INCREMENT, `accountId` INT(11) NOT NULL , `salesPackageName` VARCHAR(30) NULL , `salesPackageId` INT(11) NULL , `cost` INT(11) NULL , `usingCredits` INT(1) NULL , `source` VARCHAR(30) NULL , `premium` INT(1) NULL , `coinPurchase` INT(1) NULL , `known` INT(1) NOT NULL, PRIMARY KEY(`id`), KEY(`accountId`), FOREIGN KEY(`accountId`) REFERENCES `accounts`(`id`));", (err, result) => {
     if (err)
@@ -20,6 +22,16 @@ String.prototype.replaceAll = function (find, replace) {
     return str.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
 };
 
+function rawBody(req, res, next) {
+    rawBody = [];
+    req.on('data', (chunk) => {
+        rawBody.push(chunk);
+    }).on('end', () => {
+        req.rawBody = Buffer.concat(rawBody).toString();
+        next();
+    });
+}
+
 /*
     /PlayerAccount/Login
     side note- i hate this
@@ -30,136 +42,73 @@ router.post('/Login', jsonParser, async (req, res) => {
     const name = req.body.Name;
     const ip = req.body.IpAddress;
 
-    database.query("SELECT id, name, rank, rankExpire, rankPerm, lastLogin FROM `" + accountsTable + "`.`accounts` WHERE `uuid`='" + uuid + "' LIMIT 1", (err, result) => {
+    database.query("SELECT id, name, rank, rankExpire, rankPerm, lastLogin, gems, coins, donorRank FROM `" + accountsTable + "`.`accounts` WHERE `uuid`='" + uuid + "' LIMIT 1", (err, result) => {
         if (err)
             throw err;
 
         if (result[0] == undefined || result[0] == null) {
-            database.query("INSERT INTO `" + accountsTable + "`.`accounts` (uuid,name,gems,gold,coins,rank) VALUES ('" + uuid + "', '" + req.body.Name + ", 5000, 50, 5000, null, ALL, null, null, null, 0')", (err, result) => {
-                database.query("SELECT id FROM `" + accountsTable + "`.`accounts` WHERE `uuid`='" + uuid + "'", (err, result) => {
-                    let responseJSON = {
-                        "AccountId": result[0].id,
-                        "Name": name,
-                        "Rank": "ALL",
-                        "RankPerm": "null",
-                        "RankExpire": "",
-                        "EconomyBalance": 100,
-                        "LastLogin": "",
-                        "DonorToken": {
-                            "Gems": 5000,
-                            "Donated": false,
-                            "SalesPackages": [],
-                            "UnknownSalesPackages": [],
-                            "Transactions": [],
-                            "CoinRewards": [],
-                            "Coins": 5000,
-                            "CustomBuilds": [],
-                            "Pets": []
-                        },
-                        "Punishments": []
-                    }
-
-                    res.send(JSON.stringify(responseJSON));
-                    res.end();
-                })
-            })
+            functions.createAccount(uuid, name, (response) => {
+                res.end(JSON.stringify(response));
+            });
             return;
         }
 
-        const id = result[0].id;
-        const name = result[0].name;
-        const rank = result[0].rank;
-        const rankExpire = result[0].rankExpire;
-        const rankPerm = result[0].rankPerm == "1" ? true : false;
-        const lastLogin = result[0].lastLogin;
+        const data = {};
+        data.AccountId = result[0].id;
+        data.Name = result[0].name;
+        data.Rank = result[0].rank;
+        data.RankExpire = result[0].rankExpire;
+        data.RankPerm = result[0].rankPerm == "1" ? true : false;
+        data.LastLogin = result[0].lastLogin;
+        data.EconomyBalance = 100;
+        data.LastLogin = parseInt(result[0].lastLogin);
+        data.Time = 0;
 
-        database.query("SELECT gems, coins, donorRank FROM `" + accountsTable + "`.`accounts` WHERE `uuid`='" + uuid + "'", (err, result) => {
-            if (err)
-                throw err;
+        data.DonorToken = {};
+        data.DonorToken.Gems = result[0].gems;
+        data.DonorToken.Coins = result[0].coins;
+        data.DonorToken.donated = result[0].donorRank == null || result[0].donorRank == "" ? false : true;
 
-            const gems = result[0].gems;
-            const coins = result[0].coins;
-            let donated;
-            if (result[0].donorRank == null || result[0].donorRank == "") {
-                donated = false;
-            } else {
-                donated = true;
-            }
+        functions.getPunishments(name, (response) => {
+            data.Punishments = response;
 
-            database.query("SELECT * FROM `" + accountsTable + "`.`accountpunishments` WHERE `target`='" + name + "'", (err, results) => {
-                if (err)
-                    throw err;
+            functions.getPurchases(data.AccountId, (known, unknown) => {
+                data.DonorToken.UnknownSalesPackages = unknown;
+                data.DonorToken.SalesPackages = known;
 
-                let punishments = [];
+                data.DonorToken.Transactions = [];
+                data.DonorToken.CoinRewards = [];
+                data.DonorToken.CustomBuilds = [];
+                data.DonorToken.Pets = [];
 
-                results.forEach(result => {
-                    punishments.push({
-                        "PunishmentId": result.id,
-                        "Admin": result.admin,
-                        "Time": parseInt(result.time),
-                        "Sentence": result.sentence,
-                        "Category": result.category,
-                        "Reason": result.reason,
-                        "Severity": result.severity,
-                        "Duration": result.duration,
-                        "Removed": null,
-                        "RemoveAdmin": null,
-                        "RemoveReason": null,
-                        "Active": true,
-                    });
-                })
+                console.log(data);
 
-                database.query("SELECT * FROM `" + accountsTable + "`.`accountpurchases` WHERE `accountId`=" + id, (err, results) => {
-                    if (err)
-                        throw err;
-
-                    let known = [];
-                    let unknown = [];
-
-                    var i = 0; // end me
-                    while (i < results.length) {
-                        let result = results[i];
-                        if (result.known == 1)
-                            known.push(result.salesPackageId)
-                        else
-                            unknown.push(result.salesPackageName)
-
-                        if (i + 1 == results.length) {
-                            break;
-                        }
-                        i++;
-                    }
-
-                    let responseJSON = {
-                        "AccountId": id,
-                        "Name": name,
-                        "Rank": rank,
-                        "RankPerm": rankPerm,
-                        "RankExpire": parseInt(rankExpire),
-                        "EconomyBalance": 100,
-                        "LastLogin": parseInt(lastLogin),
-                        "Time": 0,
-                        "DonorToken": {
-                            "Gems": gems,
-                            "Donated": donated,
-                            "SalesPackages": known,
-                            "UnknownSalesPackages": unknown,
-                            "Transactions": [],
-                            "CoinRewards": [],
-                            "Coins": coins,
-                            "CustomBuilds": [],
-                            "Pets": []
-                        },
-                        "Punishments": punishments
-                    }
-
-                    console.log(responseJSON);
-
-                    res.send(JSON.stringify(responseJSON));
-                    res.end();
-                })
+                res.end(JSON.stringify(data));
             })
         })
+        // RESPONSE:
+        // let responseJSON = {
+        //     "AccountId": id,
+        //     "Name": name,
+        //     "Rank": rank,
+        //     "RankPerm": rankPerm,
+        //     "RankExpire": parseInt(rankExpire),
+        //     "EconomyBalance": 100,
+        //     "LastLogin": parseInt(lastLogin),
+        //     "Time": 0,
+        //     "DonorToken": {
+        //         "Gems": gems,
+        //         "Donated": donated,
+        //         "SalesPackages": known,
+        //         "UnknownSalesPackages": unknown,
+        //         "Transactions": [],
+        //         "CoinRewards": [],
+        //         "Coins": coins,
+        //         "CustomBuilds": [],
+        //         "Pets": []
+        //     },
+        //     "Punishments": punishments
+        // }
     });
 });
 
@@ -167,25 +116,7 @@ router.post('/Login', jsonParser, async (req, res) => {
     /PlayerAccount/GetAccount
 */
 router.post('/GetAccountByUUID', jsonParser, (res, req) => {
-    const uuid = req.body.Uuid;
-
-    database.query("SELECT id, name, rank, rankExpire, lastLogin FROM `" + accountsTable + "`.`accounts` WHERE `uuid`='" + uuid + "' LIMIT 1", (err, result) => {
-        if (err)
-            throw err;
-
-        var responseJSON = {
-            "AccountId": result[0].id,
-            "Name": result[0].name,
-            "Rank": result[0].rank,
-            "RankPerm": result[0].rankPerm,
-            "RankExpire": parseInt(result[0].rankExpire),
-            "EconomyBalance": 100,
-            "LastLogin": parseInt(result[0].lastLogin)
-        }
-
-        res.send(JSON.stringify(responseJSON));
-        res.end();
-    });
+    //TODO aka im lazy
 });
 
 /*
@@ -196,27 +127,11 @@ router.post('/RankUpdate', jsonParser, (req, res) => res.end(req.body.Rank));
 /*
     /PlayerAccount/GetMatches
 */
-router.post('/GetMatches', rawParser, (req, res) => {
-    const name = "" + "%";
-    console.log(name, req.body, req.rawBody);
-    database.query("SELECT name FROM `" + accountsTable + "`.`accounts` WHERE `name` LIKE '" + name + "'", (err, result) => {
-        if (err)
-            throw err;
-
-        let names = [];
-
-        result.forEach(result => {
-            if (result == name.replace("%", "")) {
-                res.send([result]);
-                res.end();
-                return;
-            }
-            names.push(result.name);
-        })
-
-        res.send(names);
-        res.end();
-    })
+router.post('/GetMatches', rawBody, (req, res) => {
+    const name = req.rawBody;
+    functions.getMatches(name.replaceAll('"', ""), (response) => {
+        res.end(response + "")
+    });
 });
 
 /*
@@ -226,28 +141,9 @@ router.post('/GemReward', jsonParser, (req, res) => {
     const source = req.body.Source;
     const name = req.body.Name;
     const amount = req.body.Amount;
-
-    database.query("SELECT id FROM `" + accountsTable + "`.`accounts` WHERE `name`='" + name + "'", (err, result) => {
-        let id = result[0].id;
-        database.query("UPDATE `" + accountsTable + "`.`accounts` SET `gems`=`gems`+" + amount + " WHERE `name`='" + name + "'", (err, result) => {
-            if (err)
-                throw err;
-
-            var reason = "";
-            if (source == null) {
-                reason = "Given";
-            } else {
-                reason = "Given by " + source;
-            }
-
-            database.query("INSERT INTO `" + accountsTable + "`.`accountgemtransactions` (accountId, reason, gems) VALUES (" + id + ", '" + reason + "', " + amount + ")", (err, result) => {
-                if (err)
-                    throw err;
-                res.send("true");
-                res.end();
-            });
-        });
-    });
+    functions.reward("gems", name, source, amount, (response) => {
+        res.end(response);
+    })
 });
 
 /*
@@ -259,27 +155,9 @@ router.post('/CoinReward', jsonParser, (req, res) => {
     const name = req.body.Name;
     const amount = req.body.Amount;
 
-    database.query("SELECT id FROM `" + accountsTable + "`.`accounts` WHERE `name`='" + name + "'", (err, result) => {
-        let id = result[0].id;
-        database.query("UPDATE `" + accountsTable + "`.`accounts` SET `coins`=`coins`+" + amount + " WHERE `name`='" + name + "'", (err, result) => {
-            if (err)
-                throw err;
-
-            var reason = "";
-            if (source == null) {
-                reason = "Given";
-            } else {
-                reason = "Given by " + source;
-            }
-
-            database.query("INSERT INTO `" + accountsTable + "`.`accountcointransactions` (accountId, reason, coins) VALUES (" + id + ", '" + reason + "', " + amount + ")", (err, result) => {
-                if (err)
-                    throw err;
-                res.send("true");
-                res.end();
-            });
-        });
-    });
+    functions.reward("coins", name, source, amount, (response) => {
+        res.end(response);
+    })
 });
 
 /*
@@ -290,13 +168,12 @@ router.post('/PurchaseKnownSalesPackage', jsonParser, (req, res) => {
     const name = req.body.AccountName;
     const usingCredits = req.body.UsingCredits;
     const salesPackageId = req.body.SalesPackageId;
-    database.query("SELECT id,coins FROM `" + accountsTable + "`.`accounts` WHERE `name`=`" + name + "`", (err, result) => {
+    database.query("SELECT id FROM `" + accountsTable + "`.`accounts` WHERE `name`=`" + name + "`", (err, result) => {
         if (err) {
             res.end("Failed");
             throw err;
         }
         const id = result[0].id;
-        const coins = result[0].coins;
 
         database.query("INSERT INTO `" + accountsTable + "`.`accountpurchases` (accountId, salesPackageId, usingCredits, known) VALUES (" + id + ", " + salesPackageId + ", " + usingCredits + ", 1)", (err, result) => {
             if (err) {
@@ -334,7 +211,7 @@ router.post('/PurchaseUnknownSalesPackage', jsonParser, (req, res) => {
         let _premium = premium ? 1 : 0;
         let _coinPurchase = coinPurchase ? 1 : 0;
 
-        database.query("INSERT INTO `" + accountsTable + "`.`accountpurchases` (accountId, salesPackageName, cost, premium, coinPurchase, known) VALUES (" + id + ", '" + salesPackageName + "', " + cost + ", " + premium + ", " + coinPurchase + ", 0)", (err, result) => {
+        database.query("INSERT INTO `" + accountsTable + "`.`accountpurchases` (accountId, salesPackageName, cost, premium, coinPurchase, known) VALUES (" + id + ", '" + salesPackageName + "', " + cost + ", " + _premium + ", " + _coinPurchase + ", 0)", (err, result) => {
             if (err) {
                 res.end("Failed");
                 throw err;
@@ -345,27 +222,16 @@ router.post('/PurchaseUnknownSalesPackage', jsonParser, (req, res) => {
 });
 
 /*
-    /PlayerAccount/GetTasksByCount
-    TODO
+    /PlayerAccount/GetTasksByCount\
 */
 router.post('/GetTasksByCount', jsonParser, (req, res) => {
-    let response = [];
-
-    response.push(
-        {
-            "Id": "Task Id",
-            "Task": "Task",
-            "UUID": "Player's uuid"
-        }
-    );
-
-    res.send(response);
-    res.end();
+    functions.getTasks((response) => {
+        res.end(response);
+    })
 });
 
 /*
     /PlayerAccount/Punish
-    NOTE: This isn't tested.
 */
 router.post('/Punish', jsonParser, (req, res) => {
     const target = req.body.Target, category = req.body.Category, sentence = req.body.Sentence,
@@ -386,50 +252,21 @@ router.post('/Punish', jsonParser, (req, res) => {
 });
 
 /*
-    /PlayerAccount/GetPunishClient
-    TODO: finish this
+    /PlayerAccount/GetPunishClient\
 */
-const bodyparser = require('body-parser');
-router.post('/GetPunishClient', async (req, res) => {
-    // const name = req.body.name;
+router.post('/GetPunishClient', rawBody, async (req, res) => {
+    const name = req.rawBody;
 
-    const name = "sqlinjection";
+    // console.log(req.body, req.body.name, req.rawBody);
 
-    console.log(req.rawBody);
-
-    database.query("SELECT * FROM `" + accountsTable + "`.`accountpunishments` WHERE `target`='" + name + "'", (err, results) => {
-        if (err)
-            throw err;
-
-        let punishments = [];
-
-        results.forEach(result => {
-            punishments.push({
-                "PunishmentId": result.id,
-                "Admin": result.admin,
-                "Time": parseInt(result.time),
-                "Sentence": result.sentence,
-                "Category": result.category,
-                "Reason": result.reason,
-                "Severity": result.severity,
-                "Duration": result.duration,
-                "Removed": null,
-                "RemoveAdmin": null,
-                "RemoveReason": null,
-                "Active": true,
-            });
-        })
-
+    functions.getPunishments(name, (response) => {
         let responseJSON = {
             "Name": name,
             "Time": 0,
-            "Punishments": punishments
+            "Punishments": response
         }
 
-        console.log(responseJSON);
-
-        res.send(JSON.stringify(responseJSON));
-        res.end();
+        res.end(JSON.stringify(responseJSON));
     })
 });
 
