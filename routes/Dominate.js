@@ -16,22 +16,23 @@ database.query("CREATE TABLE IF NOT EXISTS `" + accountsTable + "`.`skills`(`id`
         throw err;
 });
 
-router.post('/GetSkills', (req, res) => {
-    let response = [
-        // {
-        //     "SkillId": 0,
-        //     "Name": "Skill Name",
-        //     "Level": 100,
-        //     "SalesPackage": {
-        //         "GameSalesPackageId": 0,
-        //         "Gems": 0,
-        //         "Free": 0
-        //     }
-        // }
-    ];
+router.post('/GetSkills', jsonParser, (req, res) => {
+    // let response = [
+    // {
+    //     "SkillId": 0,
+    //     "Name": "Skill Name",
+    //     "Level": 100,
+    //     "SalesPackage": {
+    //         "GameSalesPackageId": 0,
+    //         "Gems": 0,
+    //         "Free": 0
+    //     }
+    // }
+    // ];
 
-    res.send(response);
-    res.end();
+    functions.getSkills(req.body, (response) => {
+        res.send(JSON.stringify(response));
+    });
 })
 
 router.post('/GetItems', (req, res) => {

@@ -16,9 +16,9 @@ functions.createSkill = function (json, callback) {
                 if (err)
                     throw err;
                 console.log(json.Name, json.Level);
-				json.SkillId = result.insertId;
-				console.log(json.SkillId);
-				callback(json);
+                json.SkillId = result.insertId;
+                console.log(json.SkillId);
+                callback(json);
             })
         }
 
@@ -26,8 +26,8 @@ functions.createSkill = function (json, callback) {
             database.query("INSERT INTO `" + accountsTable + "`.`transactions` (name) VALUES ('" + json.Name + "')", (err, result) => {
                 if (err)
                     throw err;
-				
-				makeSkill(result.insertId);
+
+                makeSkill(result.insertId);
             })
         } else {
             makeSkill(result[0].id);
@@ -35,55 +35,48 @@ functions.createSkill = function (json, callback) {
     })
 }
 
-/**
- * @todo
- *  - get the skill id
- *  - insert the skill if it's not already there
- *  - get the salespackageid
- *  - insert & get the salespackageid if it's not there
- *  - return
- */
-
 functions.getSkills = function (json, callback) {
     let skills = [];
-    new Promise((resolve, reject) => {
-        for (var i = 0; i < json.length; i++) {
-            let skill = json[i];
-            database.query("SELECT * FROM `" + accountsTable + "`.`skills` WHERE `name`='" + json.Name + "'", (err, result) => {
-                if (err)
-                    throw err;
-                if (result[0] == undefined || result[0] == null) {
-                    this.createSkill(skill, (response) => {
-                        skills.push(response);
-                        console.log("pushing")
-                    });
+    let i = 0;
+
+    for (var _skill of Object.keys(json)) {
+        let skill = json[_skill];
+        database.query("SELECT * FROM `" + accountsTable + "`.`skills` WHERE `name`='" + skill.Name + "' LIMIT 1", (err, result) => {
+            if (err)
+                throw err;
+
+            if (result.length == 0) {
+                this.createSkill(skill, (response) => {
+                    skills.push(response);
+                });
+
+                if ((i + 1) == Object.keys(json).length) {
+                    callback(skills);
                 } else {
-                    let skill = {};
-                    skill.SkillId = result[0].SkillId;
-                    skill.Name = result[0].Name;
-                    skill.Level = result[0].Level;
-
-                    skill.SalesPackage = {};
-                    skill.SalesPackage.Gems = result[0].Gems;
-                    skill.SalesPackage.Free = result[0].Free;
-
-                    skills.push(skill);
+                    i++;
                 }
-                console.log("nightmare");
-            })
-            if (i++ == json.length || i == json.length) {
-                resolve();
-            }
-        }
 
-        // resolve();
-        // console.log(skills);
-        // console.log("returning")
-        // return skills;
-    }).then(() => {
-        console.log("returning")
-        return skills;
-    })
+            } else {
+                let skill = {};
+                skill.SkillId = result[0].id;
+                skill.Name = result[0].name;
+                skill.Level = result[0].level;
+
+                skill.SalesPackage = {};
+                skill.SalesPackage.Gems = result[0].gems;
+                skill.SalesPackage.Free = result[0].free == "1" ? true : false;
+                skill.SalesPackage.GameSalesPackageId = result[0].gameSalesPackageId;
+
+                skills.push(skill);
+
+                if ((i + 1) == Object.keys(json).length) {
+                    callback(skills);
+                } else {
+                    i++;
+                }
+            }
+        })
+    }
 }
 
 module.exports = functions;
