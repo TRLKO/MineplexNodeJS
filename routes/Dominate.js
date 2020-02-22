@@ -27,39 +27,16 @@ router.post('/GetSkills', jsonParser, (req, res) => {
     });
 })
 
-router.post('/GetItems', (req, res) => {
-    let response = [
-        // {
-        //     "Name": "Item Name",
-        //     "Material": "Material",
-        //     "SalesPackage": {
-        //         "GameSalesPackageId": 0,
-        //         "Gems": 0,
-        //         "Free": 0
-        //     }
-        // }
-    ];
-
+router.post('/GetItems', jsonParser, (req, res) => {
     functions.getItems(req.body, (response) => {
         res.end(JSON.stringify(response));
     })
 })
 
-router.post('/GetClasses', (req, res) => {
-    let response = [
-        // {
-        //     "PvpClassId": 0,
-        //     "Name": "Name",
-        //     "SalesPackage": {
-        //         "GameSalesPackageId": 0,
-        //         "Gems": 0,
-        //         "Free": 0
-        //     }
-        // }
-    ]
-
-    res.send(response);
-    res.end();
+router.post('/GetClasses', jsonParser, (req, res) => {
+    functions.getClasses(req.body, (response) => {
+        res.end(JSON.stringify(response));
+    })
 })
 
 module.exports = router;

@@ -4,6 +4,7 @@ const accountsTable = config.table_accounts;
 
 let functions = {};
 
+// SKILLS
 functions.getSkills = function (json, callback) {
     let skills = [];
     let i = 0;
@@ -17,14 +18,13 @@ functions.getSkills = function (json, callback) {
             if (result.length == 0) {
                 this.createSkill(skill, (response) => {
                     skills.push(response);
+
+                    if ((i + 1) == Object.keys(json).length) {
+                        callback(skills);
+                    } else {
+                        i++;
+                    }
                 });
-
-                if ((i + 1) == Object.keys(json).length) {
-                    callback(skills);
-                } else {
-                    i++;
-                }
-
             } else {
                 let skill = {};
                 skill.SkillId = result[0].id;
@@ -77,6 +77,7 @@ functions.createSkill = function (json, callback) {
     })
 }
 
+// ITEMS
 functions.getItems = function (json, callback) {
     let items = [];
     let i = 0;
@@ -90,13 +91,13 @@ functions.getItems = function (json, callback) {
             if (result.length == 0) {
                 this.createSkill(item, (response) => {
                     items.push(response);
-                });
 
-                if ((i + 1) == Object.keys(json).length) {
-                    callback(items);
-                } else {
-                    i++;
-                }
+                    if ((i + 1) == Object.keys(json).length) {
+                        callback(items);
+                    } else {
+                        i++;
+                    }
+                });
             } else {
                 database.query("SELECT `id` FROM `" + accountsTable + "`.`transactions` WHERE `name`='" + item.Name + "'", (err, result1) => {
                     let item = {};
@@ -146,6 +147,7 @@ functions.createItem = function (json, callback) {
     })
 }
 
+// CLASSES
 functions.getClasses = function (json, callback) {
     let classes = [];
     let i = 0;
@@ -157,28 +159,28 @@ functions.getClasses = function (json, callback) {
                 throw err;
 
             if (result.length == 0) {
-                this.createSkill(_class, (response) => {
-                    items.push(response);
-                });
+                this.createClass(_class, (response) => {
+                    classes.push(response);
 
-                if ((i + 1) == Object.keys(json).length) {
-                    callback(classes);
-                } else {
-                    i++;
-                }
+                    if ((i + 1) == Object.keys(json).length) {
+                        callback(classes);
+                    } else {
+                        i++;
+                    }
+                });
             } else {
                 database.query("SELECT `id` FROM `" + accountsTable + "`.`transactions` WHERE `name`='" + _class.Name + "'", (err, result1) => {
                     let _class = {};
                     _class.PvpClassId = result[0].id;
                     _class.Name = result[0].name;
 
-                    skill.SalesPackage = {};
-                    skill.SalesPackage.GameSalesPackageId = result1[0].id;
+                    _class.SalesPackage = {};
+                    _class.SalesPackage.GameSalesPackageId = result1[0].id;
 
-                    items.push(item);
+                    classes.push(_class);
 
                     if ((i + 1) == Object.keys(json).length) {
-                        callback(_class);
+                        callback(classes);
                     } else {
                         i++;
                     }
@@ -188,16 +190,16 @@ functions.getClasses = function (json, callback) {
     }
 }
 
-functions.createItem = function (json, callback) {
+functions.createClass = function (json, callback) {
     database.query("SELECT `id` FROM `" + accountsTable + "`.`transactions` WHERE `name`='" + json.Name + "'", (err, result) => {
         if (err)
             throw err;
 
         function make() {
-            database.query("INSERT INTO `" + accountsTable + "`.`items` (name,categoryId,rarity) VALUES ('" + json.Name + "', " + json.CategoryId + ", " + json.Rarity + ")", (err, result) => {
+            database.query("INSERT INTO `" + accountsTable + "`.`class` (name) VALUES ('" + json.Name + "')", (err, result) => {
                 if (err)
                     throw err;
-                json.SkillId = result.insertId;
+                json.PvpClassId = result.insertId;
                 callback(json);
             })
         }
