@@ -1,3 +1,7 @@
+/**
+ * @author github.com/randomdevlol / memes#2030
+*/
+
 const express = require('express');
 const router = express.Router();
 const config = require('../config.json');

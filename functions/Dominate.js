@@ -1,5 +1,10 @@
-const config = require('../config.json')
+/**
+ * @author github.com/randomdevlol / memes#2030
+ * @note to anyone reading this code, i am so very sorry
+ */
+
 const database = require('../Database');
+const config = require('../config.json')
 const accountsTable = config.table_accounts;
 
 let functions = {};

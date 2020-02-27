@@ -10,8 +10,8 @@ Replacement for the unfinished php files.
 * Make sure your database is running
 * Open up cmd prompt/terminal in the folder of the clone of this project
 * Run ```npm install```
-* After that is done installing the libraries run ```npm run production```
-* Change your webServer value in all config.yml files to be ```http://127.0.0.1:8080``` or ```http://localhost:8080```
+* After that is done installing the libraries run ```npm run production``` or ```node app.js```
+* Change your webServer value in all config.yml files to be ```http://127.0.0.1:8080/``` or ```http://localhost:8080/``` **Add the "/" at the end or you will get an error!**
 * You're all set!
 
 ## Structure
@@ -27,8 +27,9 @@ The functions that are called in the routers.
 These are basically a bunch of functions w/ callbacks to make the code more readable & to allow expanding if anyone wants to make something like a front end for this.
 
 ### Todo
-* Dominate Routes & Functions
+* Test Dominate Routes & Functions
 * Pets Routes & Functions
+* SaveCustomBuild
 
 ## Authors
 * OnlyJoking/randomdevlol - Main Contributor & Project Manager

@@ -1,3 +1,7 @@
+/**
+ * @author github.com/randomdevlol / memes#2030
+*/
+
 const mysql = require('mysql');
 const config = require('./config.json');
 

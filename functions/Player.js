@@ -1,3 +1,7 @@
+/**
+ * @author github.com/randomdevlol / memes#2030
+*/
+
 const config = require('../config.json')
 const database = require('../Database');
 const accountsTable = config.table_accounts;
@@ -26,8 +30,8 @@ functions.createAccount = function (uuid, name, callback) {
                 "Pets": []
             },
             "Punishments": []
-		}
-			
+        }
+
         callback(responseJSON);
     })
 }
@@ -39,7 +43,7 @@ functions.getPunishments = function (name, callback) {
 
         let punishments = [];
 
-        results.forEach(result => {
+        results.forEach((result, index) => {
             punishments.push({
                 "PunishmentId": result.id,
                 "Admin": result.admin,
@@ -54,9 +58,11 @@ functions.getPunishments = function (name, callback) {
                 "RemoveReason": null,
                 "Active": true,
             });
-        })
 
-        callback(punishments);
+            if (++index == results.length) {
+                callback(punishments);
+            }
+        })
     })
 }
 
@@ -68,21 +74,18 @@ functions.getPurchases = function (id, callback) {
         let known = [];
         let unknown = [];
 
-        var i = 0; // end me
-        while (i < results.length) {
-            let result = results[i];
+        results.forEach((result, index) => {
             if (result.known == 1)
                 known.push(result.salesPackageId)
             else
                 unknown.push(result.salesPackageName)
 
-            if (i + 1 == results.length) {
-                break;
+            if (++index == results.length) {
+                callback(known, unknown);
             }
-            i++;
-        }
 
-        callback(known, unknown);
+            i++;
+        });
     })
 }
 
@@ -147,15 +150,18 @@ functions.getMatches = function (name, callback) {
 
         let names = [];
 
-        result.forEach(result => {
+        result.forEach((result, index) => {
             if (result == name) {
-                res.end([`${result.name}`]);
+                callback([`${result.name}`]);
                 return;
             }
-            names.push(`${result.name}`);
-        })
 
-        callback(names);
+            names.push(`${result.name}`);
+
+            if (++index == result.length) {
+                callback(names);
+            }
+        })
     })
 }
 

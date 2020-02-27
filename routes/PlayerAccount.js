@@ -1,10 +1,12 @@
+/**
+ * @author github.com/randomdevlol / memes#2030
+*/
+
 const express = require('express');
 const router = express.Router();
-const config = require('../config.json');
-
 const jsonParser = express.json();
-const rawParser = express.raw();
 
+const config = require('../config.json');
 const database = require('../Database');
 const accountsTable = config.table_accounts;
 
@@ -35,7 +37,6 @@ function rawBody(req, res, next) {
 /*
     /PlayerAccount/Login
     side note- i hate this
-    TODO: adding a player to the database when they haven't joined before
 */
 router.post('/Login', jsonParser, async (req, res) => {
     const uuid = req.body.Uuid;
@@ -80,8 +81,6 @@ router.post('/Login', jsonParser, async (req, res) => {
                 data.DonorToken.CoinRewards = [];
                 data.DonorToken.CustomBuilds = [];
                 data.DonorToken.Pets = [];
-
-                console.log(data);
 
                 res.end(JSON.stringify(data));
             })
@@ -141,7 +140,7 @@ router.post('/GemReward', jsonParser, (req, res) => {
     const source = req.body.Source;
     const name = req.body.Name;
     const amount = req.body.Amount;
-    functions.reward("gems", name, source, amount, (response) => {
+    functions.reward("gem", name, source, amount, (response) => {
         res.end(response);
     })
 });
@@ -155,7 +154,7 @@ router.post('/CoinReward', jsonParser, (req, res) => {
     const name = req.body.Name;
     const amount = req.body.Amount;
 
-    functions.reward("coins", name, source, amount, (response) => {
+    functions.reward("coin", name, source, amount, (response) => {
         res.end(response);
     })
 });
