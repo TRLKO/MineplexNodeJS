@@ -128,8 +128,9 @@ router.post('/RankUpdate', jsonParser, (req, res) => res.end(req.body.Rank));
 */
 router.post('/GetMatches', rawBody, (req, res) => {
     const name = req.rawBody;
+    console.log(name);
     functions.getMatches(name.replaceAll('"', ""), (response) => {
-        res.end(response + "")
+        res.end(response)
     });
 });
 

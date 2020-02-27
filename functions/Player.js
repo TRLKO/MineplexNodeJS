@@ -41,6 +41,10 @@ functions.getPunishments = function (name, callback) {
         if (err)
             throw err;
 
+        if (results.length == 0) {
+            return callback([]);
+        }
+
         let punishments = [];
 
         results.forEach((result, index) => {
@@ -71,6 +75,10 @@ functions.getPurchases = function (id, callback) {
         if (err)
             throw err;
 
+        if (results.length == 0) {
+            return callback([], []);
+        }
+
         let known = [];
         let unknown = [];
 
@@ -83,8 +91,6 @@ functions.getPurchases = function (id, callback) {
             if (++index == results.length) {
                 callback(known, unknown);
             }
-
-            i++;
         });
     })
 }
@@ -93,7 +99,7 @@ functions.reward = function (type, name, source, amount, callback) {
     const transactionsTable = "account" + type + "transactions";
     database.query("SELECT id FROM `" + accountsTable + "`.`accounts` WHERE `name`='" + name + "'", (err, result) => {
         let id = result[0].id;
-        database.query("UPDATE `" + accountsTable + "`.`accounts` SET `" + type + "`=`" + type + "`+" + amount + " WHERE `name`='" + name + "'", (err, result) => {
+        database.query("UPDATE `" + accountsTable + "`.`accounts` SET `" + (type + "s") + "`=`" + (type + "s") + "`+" + amount + " WHERE `name`='" + name + "'", (err, result) => {
             if (err)
                 throw err;
 
@@ -148,11 +154,15 @@ functions.getMatches = function (name, callback) {
         if (err)
             throw err;
 
+        if (result.length == 0) {
+            callback([]);
+        }
+
         let names = [];
 
         result.forEach((result, index) => {
-            if (result == name) {
-                callback([`${result.name}`]);
+            if (result.name == name) {
+                callback(`[${result.name}]`);
                 return;
             }
 
