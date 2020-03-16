@@ -14,6 +14,13 @@ Replacement for the unfinished php files.
 * Change your webServer value in all config.yml files to be ```http://127.0.0.1:8080/``` or ```http://localhost:8080/``` **Add the "/" at the end or you will get an error!**
 * You're all set!
 
+## Chat filter
+* Change ```chat_filter``` in [config.json](config.json) to be ```true```
+* Add the words you want to be filtered in [chatfilter.json](chatfilter.json)
+* Go into `mineplex.core.chat.Chat` and replace line ```58```(```_filterUrl```) to be `http://127.0.0.1:8080/content/item/moderate`
+* Change line ```448``` to be ```HttpURLConnection connection = null;```
+* Change line ```457``` to be ```connection = (HttpURLConnection) obj.openConnection();```
+
 ## Structure
 ### [/](/)
 Main files such as the [license](LICENSE.md) and the actual [app][app.js] file.

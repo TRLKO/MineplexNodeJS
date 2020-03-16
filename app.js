@@ -6,9 +6,9 @@ const express = require('express');
 const app = express();
 
 app.use('/PlayerAccount', require('./routes/PlayerAccount'));
-app.use('/', require('./routes/Dominate'))
 app.use('/Dominate', require('./routes/Dominate'));
 app.use('/Pets', require('./routes/Pets'));
+app.use('/content', require('./routes/Chat'));
 
 app.listen(8080, () => {
     console.log(`Server Started!`)

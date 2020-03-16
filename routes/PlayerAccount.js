@@ -130,7 +130,7 @@ router.post('/GetMatches', rawBody, (req, res) => {
     const name = req.rawBody;
     console.log(name);
     functions.getMatches(name.replaceAll('"', ""), (response) => {
-        res.end(response)
+        res.json(response);
     });
 });
 

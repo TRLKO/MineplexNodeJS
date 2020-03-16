@@ -158,18 +158,14 @@ functions.getMatches = function (name, callback) {
             callback([]);
         }
 
-        let names = [];
-
         result.forEach((result, index) => {
             if (result.name == name) {
-                callback(`[${result.name}]`);
+                callback([`${result.name}`]);
                 return;
             }
 
-            names.push(`${result.name}`);
-
             if (++index == result.length) {
-                callback(names);
+                callback([]);
             }
         })
     })
