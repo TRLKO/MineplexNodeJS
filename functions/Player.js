@@ -9,8 +9,8 @@ const accountsTable = config.table_accounts;
 let functions = {};
 
 functions.createAccount = function (uuid, name, callback) {
-    database.query("INSERT INTO `" + accountsTable + "`.`accounts` (uuid,name,gems,gold,coins,rank) VALUES ('" + uuid + "', '" + req.body.Name + ", 5000, 50, 5000, null, ALL, null, null, null, 0')", (err, result) => {
-        let responseJSON = {
+    database.query("INSERT INTO `" + accountsTable + "`.`accounts` (uuid,name,gems,gold,coins,rank) VALUES ('" + uuid + "', '" + name + ", 5000, 50, 5000, null, ALL, null, null, null, 0')", (err, result) => {
+        callback({
             "AccountId": result.insertId,
             "Name": name,
             "Rank": "ALL",
@@ -30,9 +30,7 @@ functions.createAccount = function (uuid, name, callback) {
                 "Pets": []
             },
             "Punishments": []
-        }
-
-        callback(responseJSON);
+        });
     })
 }
 
@@ -110,7 +108,7 @@ functions.reward = function (type, name, source, amount, callback) {
                 reason = "Given by " + source;
             }
 
-            database.query("INSERT INTO `" + accountsTable + "`.`" + transactionsTable + "` (accountId, reason, gems) VALUES (" + id + ", '" + reason + "', " + amount + ")", (err, result) => {
+            database.query("INSERT INTO `" + accountsTable + "`.`" + transactionsTable + "` (accountId, reason, " + (type + "s") + ") VALUES (" + id + ", '" + reason + "', " + amount + ")", (err, result) => {
                 if (err)
                     throw err;
                 callback("true")
@@ -124,9 +122,8 @@ functions.getTasks = function (callback) {
         if (err)
             throw err;
         let response = [];
-        var i = 0;
-        while (i < results.length) {
-            let result = results[i];
+
+        results.forEach((result, index) => {
             let task = {};
             task.Id = result.taskId
 
@@ -140,12 +137,13 @@ functions.getTasks = function (callback) {
                         throw err;
                     task.Task = result[0].name;
                     response.push(task);
+
+                    if (++index == results.length) {
+                        callback(response);
+                    }
                 })
             })
-            i++;
-        }
-
-        callback(response);
+        })
     });
 }
 
@@ -169,6 +167,248 @@ functions.getMatches = function (name, callback) {
             }
         })
     })
+}
+
+/*
+[
+    {
+        CustomBuildNumber: custombuildnumber
+        PvpClass: pvpclass,
+        SwordSkill: swordSkill,
+        SwordSkillLevel: swordskilllevel
+        AxeSkill: axeskill,
+        AxeSkillLevel: axeskilllevel,
+        BowSkill: bowSkill,
+        BowSkillLevel: bowSkillLevel,
+        ClassPassiveASkill: classpassiveaskill,
+        ClassPassiveASkillLevel: classpassiveaskilllevel,
+        ClassPassiveBSkill: classpassivebskill,
+        ClassPassiveBSkillLevel: classpassivebskilllevel,
+        GlobalPassiveSkill: globalpassiveskill,
+        GlobalPassiveSkillLevel: globalpassiveskilllevel,
+        Slots: [
+            Name: name,
+            Material: material,
+            Amount: amount
+        ]
+    }
+]
+*/
+functions.getCustomBuilds = (name, callback) => {
+    let response = [];
+    if (process.env.STAGE != "DEVELOPMENT") {
+        return callback(response);
+    }
+
+    database.query("SELECT * FROM `" + accountsTable + "`.`accountcustombuilds` WHERE `playerName`='" + name + "' AND `active`=1", (err, results) => {
+        if (err)
+            throw err;
+
+        if (results.length == 0) {
+            console.log('return 1');
+            callback(response);
+        }
+
+        results.forEach((result, index) => {
+            console.log('foreach 1');
+
+            let build = {};
+
+            build.CustomBuildId = result.id;
+            build.CustomBuildNumber = result.number;
+            build.PvpClass = result.pvpClass;
+
+            build.SwordSkill = result.swordSkill || "";
+            build.SwordSkillLevel = result.SwordSkillLevel;
+
+            build.AxeSkill = result.axeSkill || "";
+            build.AxeSkillLevel = result.axeSkillLevel;
+
+            build.BowSkill = result.bowSkill || "";
+            build.BowSkillLevel = result.bowSkillLevel;
+
+            build.ClassPassiveASkill = result.classPassiveASkill || "";
+            build.ClassPassiveASkillLevel = result.classPassiveASkillLevel;
+
+            build.ClassPassiveBSkill = result.classPassiveBSkill || "";
+            build.ClassPassiveBSkillLevel = result.classPassiveBSkillLevel;
+
+            build.GlobalPassiveSkill = result.globalPassiveSkill || "";
+            build.GlobalPassiveSkillLevel = result.globalPassiveSkillLevel;
+
+            build.Slots = [];
+            database.query("SELECT * FROM `" + accountsTable + "`.`classslots` WHERE `buildId`=" + result.id, (err, _results) => {
+                if (err)
+                    throw err;
+
+                if (_results.length == 0 && ++index == results.length) {
+                    console.log('return 2');
+                    response.push(build);
+                    callback(response);
+                }
+
+                _results.forEach((result, _index) => {
+                    console.log('foreach 2');
+
+                    let slot = {};
+                    slot.Name = result.name;
+                    slot.Material = result.material;
+                    slot.Amount = result.amount;
+
+                    build.Slots.push(slot);
+                    response.push(build);
+
+                    if (++_index == _results.length && ++index == results.length) {
+                        console.log('return 3');
+                        callback(response);
+                    }
+                })
+            })
+        });
+    })
+}
+
+// i am so sorry to anyone reading this code
+functions.saveCustomBuild = (json, callback) => {
+    if (process.env.STAGE != "DEVELOPMENT") {
+        return callback();
+    }
+
+    let {
+        CustomBuildId,
+        PlayerName,
+        Active,
+        CustomBuildNumber,
+        PvpClass,
+        SwordSkill,
+        SwordSkillLevel,
+        AxeSkill,
+        AxeSkillLevel,
+        BowSkill,
+        BowSkillLevel,
+        ClassPassiveASkill,
+        ClassPassiveASkillLevel,
+        ClassPassiveBSkill,
+        ClassPassiveBSkillLevel,
+        GlobalPassiveSkill,
+        GlobalPassiveSkillLevel,
+        Slots
+    } = json;
+
+    console.log(JSON.stringify(json));
+
+    database.query("SELECT `pvpClass` FROM `" + accountsTable + "`.`accountcustombuilds` WHERE `playerName`='" + PlayerName + "' AND `pvpClass`='" + PvpClass + "'", (err, result) => {
+        if (err)
+            throw err;
+
+        if (result.length == 0) {
+            run();
+        } else {
+            database.query("DELETE FROM `" + accountsTable + "`.`accountcustombuilds` WHERE `playerName`='" + PlayerName + "' AND `pvpClass`='" + PvpClass + "'", (err, result) => {
+                if (err)
+                    throw err;
+                run();
+            })
+        }
+
+        function run() {
+            let indexes = "playerName,active,number,pvpClass";
+            let values = `'${PlayerName}',${Active ? 1 : 0},${CustomBuildNumber},'${PvpClass}'`;
+
+            if (SwordSkill != '') {
+                if (indexes.length != 0)
+                    indexes += ",";
+                if (values.length != 0)
+                    values += ",";
+                indexes += "swordSkill, swordSkillLevel";
+                values += `'${SwordSkill}',${SwordSkillLevel}`;
+            }
+            if (AxeSkill != '') {
+                if (indexes.length != 0)
+                    indexes += ",";
+                if (values.length != 0)
+                    values += ",";
+                indexes += "axeSkill, axeSkillLevel";
+                values += `'${AxeSkill}',${AxeSkillLevel}`;
+            }
+            if (BowSkill != '') {
+                if (indexes.length != 0)
+                    indexes += ",";
+                if (values.length != 0)
+                    values += ",";
+                indexes += "bowSkill, bowSkillLevel";
+                values += `'${BowSkill}',${BowSkillLevel}`;
+            }
+            if (ClassPassiveASkill != '') {
+                if (indexes.length != 0)
+                    indexes += ",";
+                if (values.length != 0)
+                    values += ",";
+                indexes += "classPassiveASkill, classPassiveASkillLevel";
+                values += `'${ClassPassiveASkill}',${ClassPassiveASkillLevel}`;
+            }
+            if (ClassPassiveBSkill != '') {
+                if (indexes.length != 0)
+                    indexes += ",";
+                if (values.length != 0)
+                    values += ",";
+                indexes += "classPassiveBSkill, classPassiveBSkillLevel";
+                values += `'${ClassPassiveBSkill}',${ClassPassiveBSkillLevel}`;
+            }
+            if (GlobalPassiveSkill != '') {
+                if (indexes.length != 0)
+                    indexes += ",";
+                if (values.length != 0)
+                    values += ",";
+                indexes += "globalPassiveSkill, globalPassiveSkillLevel";
+                values += `'${GlobalPassiveSkill}',${GlobalPassiveSkillLevel}`;
+            }
+
+            let updateString = "INSERT INTO `" + accountsTable + "`.`accountcustombuilds` (" + indexes + ") VALUES(" + values + ")";
+
+            console.log(updateString);
+
+            database.query(updateString, (err, result) => {
+                if (err)
+                    throw err;
+
+                Slots.forEach((slot, index) => {
+                    let {
+                        Name,
+                        Material,
+                        Amount
+                    } = slot;
+
+                    database.query("SELECT `buildId` FROM `" + accountsTable + "`.`classslots` WHERE `buildId`=" + CustomBuildId + " AND `name`='" + Name + "'", (err, result) => {
+                        if (err)
+                            throw err;
+                        if (result.length != 0) {
+                            database.query("DELETE FROM `" + accountsTable + "`.`classslots` WHERE `buildId`=" + CustomBuildId + " AND `name`='" + Name + "'", (err, result) => {
+                                if (err)
+                                    throw err;
+                                run();
+                            })
+                        } else {
+                            run();
+                        }
+                    })
+
+                    function run() {
+                        updateString = "INSERT INTO `" + accountsTable + "`.`classslots` (buildId, name, material, amount) VALUES (" + CustomBuildId + ", '" + Name + "', '" + Material + "', " + Amount + ")"
+                        database.query(updateString, (err, result) => {
+                            if (err)
+                                throw err;
+
+                            if (++index == Slots.length) {
+                                callback();
+                            }
+                        })
+                    }
+                })
+            })
+        }
+    })
+
 }
 
 module.exports = functions;

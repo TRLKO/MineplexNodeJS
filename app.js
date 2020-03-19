@@ -2,6 +2,8 @@
  * @author github.com/randomdevlol / memes#2030
 */
 
+require('dotenv').config();
+
 const express = require('express');
 const app = express();
 

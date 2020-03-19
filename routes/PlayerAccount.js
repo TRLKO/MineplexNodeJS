@@ -47,7 +47,7 @@ router.post('/Login', jsonParser, async (req, res) => {
         if (err)
             throw err;
 
-        if (result[0] == undefined || result[0] == null) {
+        if (result.length == 0) {
             functions.createAccount(uuid, name, (response) => {
                 res.end(JSON.stringify(response));
             });
@@ -77,12 +77,16 @@ router.post('/Login', jsonParser, async (req, res) => {
                 data.DonorToken.UnknownSalesPackages = unknown;
                 data.DonorToken.SalesPackages = known;
 
-                data.DonorToken.Transactions = [];
-                data.DonorToken.CoinRewards = [];
-                data.DonorToken.CustomBuilds = [];
-                data.DonorToken.Pets = [];
+                functions.getCustomBuilds(name, (builds) => {
+                    data.DonorToken.Transactions = [];
+                    data.DonorToken.CoinRewards = [];
+                    data.DonorToken.CustomBuilds = builds;
+                    data.DonorToken.Pets = [];
 
-                res.end(JSON.stringify(data));
+                    console.log(JSON.stringify(builds));
+
+                    res.end(JSON.stringify(data));
+                })
             })
         })
         // RESPONSE:
@@ -196,15 +200,13 @@ router.post('/PurchaseUnknownSalesPackage', jsonParser, (req, res) => {
     const coinPurchase = req.body.CoinPurchase;
     database.query("SELECT id,coins FROM `" + accountsTable + "`.`accounts` WHERE `name`='" + name + "'", (err, result) => {
         if (err) {
-            res.send("Failed");
-            res.end();
+            res.end("Failed");
             throw err;
         }
         const id = result[0].id;
         const coins = result[0].coins;
         if (cost > coins) {
-            res.send("InsufficientFunds");
-            res.end();
+            res.end("InsufficientFunds");
             return;
         }
 
@@ -246,8 +248,7 @@ router.post('/Punish', jsonParser, (req, res) => {
     database.query(query, (err, result) => {
         if (err)
             throw err;
-        res.send("Punished");
-        res.end();
+        res.end("Punished");
     })
 });
 
@@ -312,5 +313,11 @@ router.post('/RemovePunishment', jsonParser, (req, res) => {
         res.end();
     })
 });
+
+router.post('/SaveCustomBuild', jsonParser, (req, res) => {
+    functions.saveCustomBuild(req.body, () => {
+        res.end("okay");
+    })
+})
 
 module.exports = router;

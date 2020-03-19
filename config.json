@@ -1,5 +1,5 @@
 {
-    "chat_filter": false,
+    "chat_filter": true,
     "host": "127.0.0.1",
     "username": "mineplex",
     "password": "mineplex",
