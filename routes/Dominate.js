@@ -24,15 +24,17 @@ database.query("CREATE TABLE IF NOT EXISTS `" + accountsTable + "`.`classes`(`id
         throw err;
 });
 
-database.query("CREATE TABLE IF NOT EXISTS `" + accountsTable + "`.`accountcustombuilds`(`id` INT(24) NOT NULL AUTO_INCREMENT, `playerName` VARCHAR(20) NOT NULL, `pvpClass` VARCHAR(100) NOT NULL, `number` INT(100) NOT NULL, `active` INT(1) NOT NULL, `swordSkill` VARCHAR(100) NULL, `swordSkillLevel` INT(100) NULL, `axeSkill` VARCHAR(100) NULL, `axeSkillLevel` INT(100) NULL, `bowSkill` VARCHAR(100) NULL, `bowSkillLevel` INT(100) NULL, `classPassiveASkill` VARCHAR(100) NULL, `classPassiveASkillLevel` INT(100) NULL, `classPassiveBSkill` VARCHAR(100) NULL, `classPassiveBSkillLevel` INT(100) NULL, `globalPassiveSkill` VARCHAR(100) NULL, `globalPassiveSkillLevel` INT(100) NULL, PRIMARY KEY(`id`));", (err, result) => {
-    if (err)
-        throw err;
-});
+if(process.env.STAGE == "DEVELOPMENT"){
+	database.query("CREATE TABLE IF NOT EXISTS `" + accountsTable + "`.`accountcustombuilds`(`id` INT(24) NOT NULL AUTO_INCREMENT, `playerName` VARCHAR(20) NOT NULL, `pvpClass` VARCHAR(100) NOT NULL, `number` INT(100) NOT NULL, `active` INT(1) NOT NULL, `swordSkill` VARCHAR(100) NULL, `swordSkillLevel` INT(100) NULL, `axeSkill` VARCHAR(100) NULL, `axeSkillLevel` INT(100) NULL, `bowSkill` VARCHAR(100) NULL, `bowSkillLevel` INT(100) NULL, `classPassiveASkill` VARCHAR(100) NULL, `classPassiveASkillLevel` INT(100) NULL, `classPassiveBSkill` VARCHAR(100) NULL, `classPassiveBSkillLevel` INT(100) NULL, `globalPassiveSkill` VARCHAR(100) NULL, `globalPassiveSkillLevel` INT(100) NULL, PRIMARY KEY(`id`));", (err, result) => {
+		if (err)
+			throw err;
+	});
 
-database.query("CREATE TABLE IF NOT EXISTS `" + accountsTable + "`.`classslots`(`buildId` INT(24) NOT NULL,`name` VARCHAR(100) NOT NULL,`material` VARCHAR(30) NOT NULL,`amount` INT(24) NOT NULL);", (err, result) => {
-    if (err)
-        throw err;
-})
+	database.query("CREATE TABLE IF NOT EXISTS `" + accountsTable + "`.`classslots`(`buildId` INT(24) NOT NULL,`name` VARCHAR(100) NOT NULL,`material` VARCHAR(30) NOT NULL,`amount` INT(24) NOT NULL);", (err, result) => {
+		if (err)
+			throw err;
+	})
+}
 
 /**
  *CREATE TABLE IF NOT EXISTS `buildslots`(
