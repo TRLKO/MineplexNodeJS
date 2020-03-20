@@ -223,7 +223,3 @@ functions.createClass = function (json, callback) {
 }
 
 module.exports = functions;
-
-/**
-[{"SkillId":0,"Name":"Swordsmanship","Level":1,"SalesPackage":{"Gems":2000,"Free":false}}]
- */

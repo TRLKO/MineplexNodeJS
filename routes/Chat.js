@@ -1,6 +1,5 @@
 /**
  * @author github.com/randomdevlol / memes#2030
- * @note to all reading this code, I am sorry
 */
 
 const express = require('express');
@@ -25,6 +24,8 @@ router.post('/item/moderate', jsonParser, (req, res) => {
         return res.json(response);
     }
 
+
+    // if anyone wanna make a better filter that'd be great
     let filteredMessage = "";
     let messageSplit = message.split(" ");
     messageSplit.forEach((part, index) => {

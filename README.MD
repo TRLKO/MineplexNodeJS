@@ -26,23 +26,22 @@ Replacement for the unfinished php files.
 Main files such as the [license](LICENSE.md) and the actual [app][app.js] file.
 
 ### [/routes](/routes)
-The [routers](https://expressjs.com/en/api.html#router) of all web requests
-Each file is a path (ex/ [PlayerAccount.js](/routes/PlayerAccount.js) refers to the /PlayerAccount/ path)
+The [routers](https://expressjs.com/en/api.html#router) of all web requests Each file is a path (ex/ [PlayerAccount.js](/routes/PlayerAccount.js) refers to the /PlayerAccount/ path)
 
 ### [/functions](/functions)
-The functions that are called in the routers.
-These are basically a bunch of functions w/ callbacks to make the code more readable & to allow expanding if anyone wants to make something like a front end for this.
+The functions that are called in the routers. These are basically a bunch of functions w/ callbacks to make the code more readable & to allow expanding if anyone wants to make something like a front end for this.
 
 ### Todo
-* Test Dominate Routes & Functions
-* Pets Routes & Functions
-* SaveCustomBuild
+* SaveCustomBuild Function
+* Pets Functions
+* Minekart Functions
+* PvP/Fishing Functions
 
 ## Authors
 * OnlyJoking/randomdevlol - Main Contributor & Project Manager
 
 ## Contributing
-Contributions are greatly appriciated as I don't have the best free time to work on this project. If you would like to contribute code modifications, please open a pull request and I'll get back to it as fast as I can!
+Contributions are greatly appreciated as I don't have the best free time to work on this project. If you would like to contribute code modifications, please open a pull request and I'll get back to it as fast as I can!
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details

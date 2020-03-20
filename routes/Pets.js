@@ -8,9 +8,9 @@ const config = require('../config.json');
 
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
-const rawParser = bodyParser.text();
 
 const database = require('../Database');
+const accountsTable = config.table_accounts;
 
 /*
     /Pets/GetPets
@@ -50,9 +50,12 @@ router.post('/GetPetExtras', jsonParser, (req, res) => {
     /Pets/AddPet
 */
 router.post('/AddPet', jsonParser, (req, res) => {
-    const name = req.body.Name;
-    const petName = req.body.PetName;
-    const petType = req.body.PetType;
+    let {
+        Name,
+        PetName,
+        PetType
+    } = req.body;
+
     res.send("Success");
     res.end();
 })
@@ -61,9 +64,12 @@ router.post('/AddPet', jsonParser, (req, res) => {
     /Pets/RemovePet
 */
 router.post('/RemovePet', jsonParser, (req, res) => {
-    const name = req.body.Name;
-    const petName = req.body.PetName;
-    const petType = req.body.PetType;
+    let {
+        Name,
+        PetName,
+        PetType
+    } = req.body;
+
     res.send("Success");
     res.end();
 })
@@ -73,9 +79,12 @@ router.post('/RemovePet', jsonParser, (req, res) => {
 */
 
 router.post('/UpdatePet', jsonParser, (req, res) => {
-    const name = req.body.Name;
-    const petName = req.body.PetName;
-    const petType = req.body.PetType;
+    let {
+        Name,
+        PetName,
+        PetType
+    } = req.body;
+
     res.send("Success");
     res.end();
 })

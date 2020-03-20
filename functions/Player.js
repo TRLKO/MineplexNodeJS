@@ -8,6 +8,60 @@ const accountsTable = config.table_accounts;
 
 let functions = {};
 
+functions.getClient = function (uuid, name, callback) {
+    database.query("SELECT id, name, rank, rankExpire, rankPerm, lastLogin, gems, coins, donorRank FROM `" + accountsTable + "`.`accounts` WHERE `uuid`='" + uuid + "' LIMIT 1", (err, result) => {
+        if (err)
+            throw err;
+
+        if (result.length == 0) {
+            if (name != null) {
+                return this.createAccount(uuid, name, (response) => {
+                    callback(JSON.stringify(response));
+                });
+            } else {
+                return callback("{}");
+            }
+        }
+
+        const data = {};
+        data.AccountId = result[0].id;
+        data.Name = result[0].name;
+        data.Rank = result[0].rank;
+        data.RankExpire = result[0].rankExpire;
+        data.RankPerm = result[0].rankPerm == "1" ? true : false;
+        data.LastLogin = result[0].lastLogin;
+        data.EconomyBalance = 100;
+        data.LastLogin = parseInt(result[0].lastLogin);
+        data.Time = 0;
+
+        data.DonorToken = {};
+        data.DonorToken.Gems = result[0].gems;
+        data.DonorToken.Coins = result[0].coins;
+        data.DonorToken.donated = result[0].donorRank == null || result[0].donorRank == "" ? false : true;
+
+        this.getPunishments(data.Name, (response) => {
+            data.Punishments = response;
+
+            this.getPurchases(data.AccountId, (known, unknown) => {
+                data.DonorToken.UnknownSalesPackages = unknown;
+                data.DonorToken.SalesPackages = known;
+
+                this.getCustomBuilds(data.Name, (builds) => {
+                    data.DonorToken.Transactions = [];
+                    data.DonorToken.CoinRewards = [];
+                    data.DonorToken.CustomBuilds = builds;
+                    data.DonorToken.Pets = [];
+
+                    if (process.env.STAGE == "DEVELOPMENT")
+                        console.log(JSON.stringify(builds));
+
+                    callback(JSON.stringify(data));
+                })
+            })
+        })
+    });
+}
+
 functions.createAccount = function (uuid, name, callback) {
     database.query("INSERT INTO `" + accountsTable + "`.`accounts` (uuid,name,gems,gold,coins,rank) VALUES ('" + uuid + "', '" + name + ", 5000, 50, 5000, null, ALL, null, null, null, 0')", (err, result) => {
         callback({
