@@ -97,7 +97,7 @@ router.post('/UpdatePet', jsonParser, (req, res) => {
 /*
     /Pets/AddPetNameTag
 */
-router.post('/AddPetNameTag', rawParser, (req, res) => {
+router.post('/AddPetNameTag', jsonParser, (req, res) => {
     const name = req.body.Name;
     res.send("Success");
     res.end();
@@ -106,7 +106,7 @@ router.post('/AddPetNameTag', rawParser, (req, res) => {
 /*
     /Pets/RemotePetNameTag
 */
-router.post('/RemovePetNameTag', rawParser, (req, res) => {
+router.post('/RemovePetNameTag', jsonParser, (req, res) => {
     const name = req.body.Name;
     res.send("Success");
     res.end();
