@@ -46,6 +46,11 @@ router.post('/GetPetExtras', jsonParser, (req, res) => {
     res.end();
 });
 
+/**
+ * CREATE TABLE IF NOT EXISTS `playerpets`(`name` VARCHAR(20) NOT NULL, `petId` INT(24) NOT NULL);
+ * CREATE TABLE IF NOT EXISTS `pets`(`id` INT(24) NOT NULL AUTO_INCREMENT, `name` VARCHAR(50) NOT NULL, `type` VARCHAR(50) NOT NULL, PRIMARY KEY(`id`));
+ */
+
 /*
     /Pets/AddPet
 */

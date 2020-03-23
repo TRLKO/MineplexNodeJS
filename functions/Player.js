@@ -6,6 +6,8 @@ const config = require('../config.json')
 const database = require('../Database');
 const accountsTable = config.table_accounts;
 
+const petFunctions = require('./Pets');
+
 let functions = {};
 
 functions.getClient = function (uuid, name, callback) {
@@ -37,7 +39,7 @@ functions.getClient = function (uuid, name, callback) {
         data.DonorToken = {};
         data.DonorToken.Gems = result[0].gems;
         data.DonorToken.Coins = result[0].coins;
-        data.DonorToken.donated = result[0].donorRank == null || result[0].donorRank == "" ? false : true;
+        data.DonorToken.Donated = result[0].donorRank == null || result[0].donorRank == "" ? false : true;
 
         this.getPunishments(data.Name, (response) => {
             data.Punishments = response;
@@ -47,15 +49,19 @@ functions.getClient = function (uuid, name, callback) {
                 data.DonorToken.SalesPackages = known;
 
                 this.getCustomBuilds(data.Name, (builds) => {
-                    data.DonorToken.Transactions = [];
-                    data.DonorToken.CoinRewards = [];
                     data.DonorToken.CustomBuilds = builds;
-                    data.DonorToken.Pets = [];
-
                     if (process.env.STAGE == "DEVELOPMENT")
-                        console.log(JSON.stringify(builds));
+                        console.log("BUILD DEBUG: " + JSON.stringify(builds));
 
-                    callback(JSON.stringify(data));
+                    petFunctions.getPlayerPets(data.Name, (pets) => {
+                        data.DonorToken.Pets = pets;
+                        data.DonorToken.PetNameTagCount = 2;
+
+                        data.DonorToken.Transactions = [];
+                        data.DonorToken.CoinRewards = [];
+
+                        callback(JSON.stringify(data));
+                    })
                 })
             })
         })
