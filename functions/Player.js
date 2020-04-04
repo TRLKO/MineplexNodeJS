@@ -53,25 +53,25 @@ functions.getClient = function (uuid, name, callback) {
                     if (process.env.STAGE == "DEVELOPMENT")
                         console.log("BUILD DEBUG: " + JSON.stringify(builds));
 
-                    if (process.env.STAGE == "DEVELOPMENT") {
-                        petFunctions.getPlayerPets(data.Name, (pets) => {
-                            data.DonorToken.Pets = pets;
-                            data.DonorToken.PetNameTagCount = 2;
+                    // if (process.env.STAGE == "DEVELOPMENT") {
+                    //     petFunctions.getPlayerPets(data.Name, (pets) => {
+                    //         data.DonorToken.Pets = pets;
+                    //         data.DonorToken.PetNameTagCount = 2;
 
-                            data.DonorToken.Transactions = [];
-                            data.DonorToken.CoinRewards = [];
+                    //         data.DonorToken.Transactions = [];
+                    //         data.DonorToken.CoinRewards = [];
 
-                            callback(JSON.stringify(data));
-                        })
-                    } else {
-                        data.DonorToken.Pets = [];
-                        data.DonorToken.PetNameTagCount = 2;
+                    //         callback(JSON.stringify(data));
+                    //     })
+                    // } else {
+                    data.DonorToken.Pets = [];
+                    data.DonorToken.PetNameTagCount = 2;
 
-                        data.DonorToken.Transactions = [];
-                        data.DonorToken.CoinRewards = [];
+                    data.DonorToken.Transactions = [];
+                    data.DonorToken.CoinRewards = [];
 
-                        callback(JSON.stringify(data));
-                    }
+                    callback(JSON.stringify(data));
+                    // }
                 })
             })
         })
