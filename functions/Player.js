@@ -80,27 +80,33 @@ functions.getClient = function (uuid, name, callback) {
 
 functions.createAccount = function (uuid, name, callback) {
     database.query("INSERT INTO `" + accountsTable + "`.`accounts` (uuid,name,gems,gold,coins,rank) VALUES ('" + uuid + "', '" + name + ", 5000, 50, 5000, null, ALL, null, null, null, 0')", (err, result) => {
-        callback({
-            "AccountId": result.insertId,
-            "Name": name,
-            "Rank": "ALL",
-            "RankPerm": "null",
-            "RankExpire": "",
-            "EconomyBalance": 100,
-            "LastLogin": "",
-            "DonorToken": {
-                "Gems": 5000,
-                "Donated": false,
-                "SalesPackages": [],
-                "UnknownSalesPackages": [],
-                "Transactions": [],
-                "CoinRewards": [],
-                "Coins": 5000,
-                "CustomBuilds": [],
-                "Pets": []
-            },
-            "Punishments": []
-        });
+        //todo fix why we need this
+        database.query("SELECT `id` FROM `" + accountsTable + "`.`accounts` WHERE `uuid`='" + uuid + "'", (err, result) => {
+            if (err)
+                throw err;
+
+            callback({
+                "AccountId": result[0].id,
+                "Name": name,
+                "Rank": "ALL",
+                "RankPerm": "null",
+                "RankExpire": "",
+                "EconomyBalance": 100,
+                "LastLogin": "",
+                "DonorToken": {
+                    "Gems": 5000,
+                    "Donated": false,
+                    "SalesPackages": [],
+                    "UnknownSalesPackages": [],
+                    "Transactions": [],
+                    "CoinRewards": [],
+                    "Coins": 5000,
+                    "CustomBuilds": [],
+                    "Pets": []
+                },
+                "Punishments": []
+            });
+        })
     })
 }
 
