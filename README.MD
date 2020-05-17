@@ -1,5 +1,6 @@
 # Mineplex Node.js
 Replacement for the unfinished php files.
+i will most likely probably be rewriting this, my condolences to anyone who went through the code
 
 ## Depends
 * [Node.js](https://nodejs.org)
