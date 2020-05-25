@@ -4,13 +4,9 @@
 
 const express = require('express');
 const router = express.Router();
-const config = require('../config.json');
 
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
-
-const database = require('../Database');
-const accountsTable = config.table_accounts;
 
 /*
     /Pets/GetPets

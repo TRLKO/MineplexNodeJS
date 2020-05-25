@@ -4,7 +4,7 @@
     "username": "mineplex",
     "password": "mineplex",
     "table_mineplex": "mineplex_mineplex",
-    "table_accounts": "account",
+    "table_accounts": "mineplex_account",
     "table_queue": "mineplex_queue",
     "table_stats": "mineplex_stats"
 }

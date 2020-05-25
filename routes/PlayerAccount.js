@@ -266,9 +266,7 @@ router.post('/RemovePunishment', jsonParser, (req, res) => {
 });
 
 router.post('/SaveCustomBuild', jsonParser, (req, res) => {
-    functions.saveCustomBuild(req.body, () => {
-        res.end("okay");
-    })
+    res.end("okay");
 })
 
 module.exports = router;

@@ -1,10 +1,20 @@
 # Mineplex Node.js
-Replacement for the unfinished php files.
-i will most likely probably be rewriting this, my condolences to anyone who went through the code
+Replacement for the unfinished php files. (this is still unfinished but at least there isn't errors)
+
+## Archive notice
+I am unable to work on this project anymore since I don't have the time. If you wish to continue development you can do so with forks.
+<br />
+Also, this code is very messy and uses a framework that isn't the fastest. If you want to rewrite it, use something like [fastify](github.com/fastify/fastify).
 
 ## Depends
 * [Node.js](https://nodejs.org)
 * MySQL database
+
+### Things this doesn't handle
+* Custom class builds
+* Dominate (skills, items, classes)
+* Pets
+* If you want to count things for the 2014 source code, fishing and minekarts
 
 ## Running
 * Edit the [config.yml](config.json) to match your database settings (Note: don't include your db's port on the host)
@@ -32,17 +42,11 @@ The [routers](https://expressjs.com/en/api.html#router) of all web requests Each
 ### [/functions](/functions)
 The functions that are called in the routers. These are basically a bunch of functions w/ callbacks to make the code more readable & to allow expanding if anyone wants to make something like a front end for this.
 
-### Todo
-* SaveCustomBuild Function
-* Pets Functions
-* Minekart Functions
-* PvP/Fishing Functions
-
 ## Authors
 * OnlyJoking/randomdevlol - Main Contributor & Project Manager
 
 ## Contributing
-Contributions are greatly appreciated as I don't have the best free time to work on this project. If you would like to contribute code modifications, please open a pull request and I'll get back to it as fast as I can!
+Make a fork of this repository and contribe through there
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
