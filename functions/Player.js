@@ -47,7 +47,7 @@ functions.getClient = function (uuid, name, callback) {
                 data.DonorToken.UnknownSalesPackages = unknown;
                 data.DonorToken.SalesPackages = known;
 
-                data.DonorToken.CustomBuilds = builds;
+                data.DonorToken.CustomBuilds = [];
 
                 data.DonorToken.Pets = [];
                 data.DonorToken.PetNameTagCount = 2;
