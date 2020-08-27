@@ -1,6 +1,9 @@
 # Mineplex Node.js
 Replacement for the unfinished php files. (this is still unfinished but at least there isn't errors)
 
+## Security notice
+This api is highly vulnerable to [sql injection](https://en.wikipedia.org/wiki/SQL_injection).
+
 ## Archive notice
 I am unable to work on this project anymore since I don't have the time. If you wish to continue development you can do so with forks.
 <br />
