@@ -8,6 +8,7 @@ This api is highly vulnerable to [sql injection](https://en.wikipedia.org/wiki/S
 I am unable to work on this project anymore since I don't have the time. If you wish to continue development you can do so with forks.
 <br />
 Also, this code is very messy and uses a framework that isn't the fastest. If you want to rewrite it, use something like [fastify](github.com/fastify/fastify).
+Please, never use this as a model for making an api.
 
 ## Depends
 * [Node.js](https://nodejs.org)
@@ -46,7 +47,7 @@ The [routers](https://expressjs.com/en/api.html#router) of all web requests Each
 The functions that are called in the routers. These are basically a bunch of functions w/ callbacks to make the code more readable & to allow expanding if anyone wants to make something like a front end for this.
 
 ## Authors
-* OnlyJoking/randomdevlol - Main Contributor & Project Manager
+* randomdevlol - Main Contributor & Project Manager
 
 ## Contributing
 Make a fork of this repository and contribe through there
